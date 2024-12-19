@@ -1,19 +1,19 @@
 import re
 
 from models.models import QwenVLModel
-from planner.base import BasePlanner, Plan
+from planner.base import PlannerInterface, Plan
 
 
-class QwenVLPlanner(BasePlanner, QwenVLModel):
+class QwenVLPlanner(PlannerInterface, QwenVLModel):
     """
     Planner implentation for QwenVL based models. It also supports derivatives such as OSAtlas
     """
 
-    def __init__(self, model_name: str):
-        super().__init__(model_name)
+    def __init__(self, model_name: str, *args, **kwargs):
+        super().__init__(model_name, *args, **kwargs)
 
     def plan(self, sys_prompt, user_prompt, *args, **kwargs):
-        messages, processed_output_text = super().inference(
+        messages, processed_output_text = super()._call(
             sys_prompt, user_prompt, *args, **kwargs
         )
 

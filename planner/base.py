@@ -37,9 +37,6 @@ Provided steps: {self.steps}
 
 
 class PlannerInterface:
-    def __init__(self, model_name: str, *args, **kwargs):
-        pass
-
     def plan(self, sys_prompt, user_prompt, *args, **kwargs) -> Plan:
         """
         Creates a plan for a current state of the desktop
@@ -65,8 +62,3 @@ class PlannerInterface:
         @returns Plan object
         """
         pass
-
-
-class BasePlanner(PlannerInterface):
-    def __init__(self, model_name: str, *args, **kwargs):
-        self.model_name = model_name

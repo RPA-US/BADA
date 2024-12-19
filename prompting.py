@@ -57,9 +57,11 @@ def take_action(
     action_model = AtlasActionmodel("OS-Copilot/OS-Atlas-Base-7B")
     grounding: Action = action_model.action(
         None,
-        f'In this UI screenshot, what is the position of the element corresponding to the command "{action.action}" (with bbox)?',
+        f'In this UI screenshot, what is the position of the element corresponding to the command "{action.action_target}" (with bbox)?',
         image=image_path,
     )
+    grounding.action = action.action
+    grounding.action_target = action.action_target
     print("Grounding: ", grounding)
 
     history.append(grounding, ActionResult.PENDING)

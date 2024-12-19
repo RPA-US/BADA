@@ -91,16 +91,34 @@ Your task is to analyze these inputs and determine the exact concrete action req
 4. If the step cannot be completed due to missing elements, describe the obstacle and suggest an alternative course of action.
 5. Use these special tokens for formatting:
    - `<|context_analysis_begin|>` and `<|context_analysis_end|>` to explain your reasoning for identifying the action.
-   - `<|object_ref_start|>` and `<|object_ref_end|>` to define the concrete action to execute. It must be a SINGULAR action.
+   - `<|action_begin|>` and `<|action_end|>` to define the concrete action to execute. It must be a SINGULAR action.
 
 
 The possible action space, and formats are
-- LeftClick -> LeftClick <element description>
-- RightClick -> RightClick <element description>
-- Type -> Type <string>
-- Press -> Press <key>
-- Finish -> Finish
-
+Action 1: LeftClick
+    - purpose: Click at the specified position.
+    - format: <|action_begin|>LeftClick<|action_end|> [<element description>]
+    - example usage: <|action_begin|>LeftClick<|action_end|> [on the "To" field in the compose window]
+Action 2: RightClick
+    - purpose: Click at the specified position.
+    - format: <|action_begin|>RightClick<|action_end|> [<element description>]
+    - example usage: <|action_begin|>RightClick<|action_end|> [on the "To" field in the compose window]
+Action 3: Type
+    - purpose: Type a string of characters.
+    - format: <|action_begin|>Type<|action_end|> [<string>]
+    - example usage: <|action_begin|>Type<|action_end|> [Albert Einsten]
+Action 4: Press
+    - purpose: Press a specific key.
+    - format: <|action_begin|>Press<|action_end|> [<key>]
+    - example usage: <|action_begin|>Press<|action_end|> [M]
+Action 5: Finish
+    - purpose: Indicate the task is finished.
+    - format: <|action_begin|>Finish<|action_end|>
+    - example usage: <|action_begin|>Finish<|action_end|>
+Action 6: Scroll
+    - purpose: Scroll in the specified direction.
+    - format: <|action_begin|>Scroll<|action_end|> [direction (UP/DOWN/LEFT/RIGHT)]
+    - example usage: <|action_begin|>Scroll<|action_end|> [UP]
 ---
 
 ### Format and Example:
@@ -121,7 +139,7 @@ Open Gmail, Compose a new email, Add recipient "client@example.com", Set subject
 <|context_analysis_end|>
 
 **Action:**
-<|object_ref_start|>Left Click on the "To" field in the compose window<|object_ref_end|>
+<|action_begin|>LeftClick<|action_end|> [on the "To" field in the compose window]
 
 ---
 

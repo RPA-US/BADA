@@ -14,8 +14,9 @@ class Action:
     def __init__(
         self,
         prompt: List[dict[str, str]],
-        action: str,
+        action_target: str,
         raw: str,
+        action: Optional[str] = None,
         reasoning: Optional[Dict[str, list[str]] | str] = None,
         coords: Optional[List[float | list[float]]] = None,
         key: Optional[str] = None,
@@ -24,6 +25,7 @@ class Action:
             raise ValueError("Coords and Key are mutually exclusive")
         self.prompt = prompt
         self.action = action
+        self.action_target = action_target
         self.raw = raw
         self.reasoning = reasoning  # optional
         self.coords = coords  # optional
@@ -33,7 +35,7 @@ class Action:
         return f"""
 Model Reasoning: {self.reasoning}
 ---
-Provided action: {self.action} {self.key if self.key else self.coords if self.coords else ""}
+Provided action: {self.action} {self.action_target} {self.key if self.key else self.coords if self.coords else ""}
 """
 
     def to_str_extended(self):
@@ -44,7 +46,7 @@ Raw Output: {self.raw}
 ---
 Model Reasoning: {self.reasoning}
 ---
-Provided action: {self.action} {self.key if self.key else self.coords if self.coords else ""}
+Provided action: {self.action} {self.action_target} {self.key if self.key else self.coords if self.coords else ""}
 """
 
 
@@ -102,9 +104,6 @@ class History:
 
 
 class ActionInterface:
-    def __init__(self, model_name: str, *args, **kwargs):
-        pass
-
     def action(self, sys_prompt, user_prompt, *args, **kwargs) -> Action:
         """
         Creates an action for a current state of the desktop given a action and an action to execute
@@ -128,8 +127,3 @@ class ActionInterface:
         @returns Action object
         """
         pass
-
-
-class BaseActionModel(ActionInterface):
-    def __init__(self, model_name: str, *args, **kwargs):
-        self.model_name = model_name
