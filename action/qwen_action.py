@@ -1,6 +1,7 @@
 import re
-import jax.numpy as jnp
 from typing import Tuple
+
+import jax.numpy as jnp
 
 from action.base import Action, ActionInterface
 from models.models import QwenVLModel
@@ -17,46 +18,30 @@ class QwenVLActionModel(ActionInterface, QwenVLModel):
         super().__init__(model_name, *args, **kwargs)
 
     def action(self, sys_prompt, user_prompt, *args, **kwargs):
-        messages, processed_output_text = super()._call(
-            sys_prompt, user_prompt, *args, **kwargs
-        )
+        messages, processed_output_text = super()._call(sys_prompt, user_prompt, *args, **kwargs)
 
         processed_output_text = next(iter(processed_output_text), None)
 
         if not processed_output_text:
-            raise RuntimeError(
-                "Something went wrong while generating the action and no output was given by the model"
-            )
+            raise RuntimeError("Something went wrong while generating the action and no output was given by the model")
 
         return self.parse_action(messages, processed_output_text)
 
-    def parse_action(self, prompt: list[dict[str, str]], model_response: str):
-        reasoning_pattern = (
-            r"<\|context_analysis_begin\|>(.*?)<\|context_analysis_end\|>"
-        )
+    def parse_action(self, prompt: list[dict[str, str]], model_response: str) -> Action:
+        reasoning_pattern = r"<\|context_analysis_begin\|>(.*?)<\|context_analysis_end\|>"
         action_name_pattern = r"<\|action_begin\|>(.*?)<\|action_end\|>"
         action_target_pattern = r"\[(.*)\]"
 
         reasoning_match = re.search(reasoning_pattern, model_response, re.DOTALL)
         action_name_match = re.search(action_name_pattern, model_response, re.DOTALL)
-        action_target_match = re.search(
-            action_target_pattern, model_response, re.DOTALL
-        )
+        action_target_match = re.search(action_target_pattern, model_response, re.DOTALL)
 
-        reasoning_content = (
-            reasoning_match.group(1).strip() if reasoning_match else None
-        )
-        action_name_content = (
-            action_name_match.group(1).strip() if action_name_match else None
-        )
-        action_target_content = (
-            action_target_match.group(1).strip() if action_target_match else None
-        )
+        reasoning_content = reasoning_match.group(1).strip() if reasoning_match else None
+        action_name_content = action_name_match.group(1).strip() if action_name_match else None
+        action_target_content: str | None = action_target_match.group(1).strip() if action_target_match else None
 
         if reasoning_content is None:
-            return Action(
-                prompt, action_target_content, model_response, action_name_content
-            )
+            return Action(prompt, action_target_content, model_response, action_name_content)
 
         reasoning = re.split(r"\n\d+\.\s", reasoning_content)
 
@@ -77,11 +62,9 @@ class AtlasActionmodel(QwenVLActionModel, QwenVLModel):
         object_ref_match = re.search(object_ref_pattern, model_response, re.DOTALL)
         box_match = re.search(box_pattern, model_response, re.DOTALL)
 
-        object_ref_content = (
-            object_ref_match.group(1).strip() if object_ref_match else None
-        )
+        object_ref_content = object_ref_match.group(1).strip() if object_ref_match else None
         box_content = box_match.group(1).strip() if box_match else None
-        coords: Tuple[int, int]
+        coords: Tuple[float, float]
         if box_content:
             num_pattern = r"(\d+).*?(\d+)"  # Number then closest number to it
             nums = re.findall(num_pattern, box_content)

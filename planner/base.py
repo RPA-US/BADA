@@ -1,3 +1,7 @@
+from abc import abstractmethod
+from typing import Optional
+
+
 class Plan:
     """
     Representation of a plan given by a planner using a structured format
@@ -7,14 +11,12 @@ class Plan:
         self,
         prompt: list[dict[str, str]],
         raw: str,
-        reasoning: dict[str, list[str]],
-        steps: list[str] | str,
+        steps: list[str],
+        reasoning: Optional[dict[str, list[str]]] = None,
     ):
         self.prompt = prompt
         self.raw = raw
         self.reasoning = reasoning
-        if type(steps) is str:
-            steps = steps.split(",")
         self.steps = steps
 
     def __str__(self):
@@ -37,6 +39,7 @@ Provided steps: {self.steps}
 
 
 class PlannerInterface:
+    @abstractmethod
     def plan(self, sys_prompt, user_prompt, *args, **kwargs) -> Plan:
         """
         Creates a plan for a current state of the desktop
@@ -53,10 +56,12 @@ class PlannerInterface:
 
         pass
 
-    def parse_plan(self, plan: str) -> Plan:
+    @abstractmethod
+    def parse_plan(self, prompt: list[dict[str, str]], plan: str) -> Plan:
         """
         Given a plan in string format, it parses it and returns a Plan object
 
+        @param prompt: The prompt given to the model
         @param plan: Output of plan method
 
         @returns Plan object

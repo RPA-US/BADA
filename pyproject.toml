@@ -18,6 +18,17 @@ dependencies = [
     "transformers==4.47.1",
 ]
 
+[tool.black]
+line-length = 120
+
+[tool.flake8]
+max-line-length = 120
+ignore = ["F841","E203","E501"]
+
+[tool.mypy]
+ignore_missing_imports = true
+explicit_package_bases = true
+
 [tool.uv.sources]
 torch = [
   { index = "torch-cpu", marker = "platform_system == 'darwin'"},
@@ -47,3 +58,8 @@ url = "https://abetlen.github.io/llama-cpp-python/whl/cpu"
 [[tool.uv.index]]
 name = "llama-cpp-python-gpu"
 url = "https://abetlen.github.io/llama-cpp-python/whl/cu124"
+
+[dependency-groups]
+dev = [
+    "pre-commit==4.0.1",
+]

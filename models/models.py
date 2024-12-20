@@ -1,5 +1,5 @@
 import gc
-from abc import ABC
+from abc import ABC, abstractmethod
 from multiprocessing import Process, Queue
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
@@ -15,7 +15,7 @@ from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
 
 
 class ModelInterface(LLM, ABC):
-    model_name: str = None
+    model_name: Optional[str] = None
     capabilities: List[str] = []
     skip_special_tokens: bool = False
     max_token: int = 10000
@@ -41,9 +41,8 @@ class ModelInterface(LLM, ABC):
             "history_len": self.history_len,
         }
 
-    def _call(
-        self, sys_prompt: str, user_prompt: str, *args: Any, **kwargs: Any
-    ) -> Tuple[List[Dict[str, Any]], str]:
+    @abstractmethod
+    def _call(self, sys_prompt: str, user_prompt: str, *args: Any, **kwargs: Any) -> Tuple[List[Dict[str, Any]], str]:
         """
         Performs an inference using qwen-vl based models
 
@@ -51,6 +50,7 @@ class ModelInterface(LLM, ABC):
         """
         pass
 
+    @abstractmethod
     def load_model(self) -> Tuple[Any, ...]:
         """
         Loads and returns the model to make inferences on
@@ -121,9 +121,7 @@ class QwenVLModel(ModelInterface):
             },
         )
 
-        text: str = processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
+        text: str = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
         image_inputs, video_inputs = process_vision_info(messages)
         inputs = processor(
@@ -140,8 +138,7 @@ class QwenVLModel(ModelInterface):
             generated_ids = model.generate(**inputs, max_new_tokens=max_tokens)
 
         generated_ids_trimmed: List[torch.Tensor] = [
-            out_ids[len(in_ids) :]
-            for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+            out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
         ]
 
         processed_output_text: str = processor.batch_decode(
@@ -150,7 +147,7 @@ class QwenVLModel(ModelInterface):
             clean_up_tokenization_spaces=False,
         )
 
-        model = processor = inputs = generated_ids = generated_ids_trimmed = None
+        model = processor = inputs = generated_ids = generated_ids_trimmed = None  # type: ignore
         self.unload(model, processor, inputs, generated_ids, generated_ids_trimmed)
 
         kwargs["result_queue"].put((messages, processed_output_text))
@@ -170,7 +167,7 @@ class QwenVLModel(ModelInterface):
         """
         # This is strictly necessary to ensure ALL memory held by torch is released when the inference is done
         # Running the inference without this results in many dangling tensors for some reason
-        result_queue = Queue()
+        result_queue: Queue = Queue()
         kwargs["result_queue"] = result_queue
         p = Process(
             target=self.inference,
@@ -187,8 +184,6 @@ class QwenVLModel(ModelInterface):
         """
         Loads and returns the model to make inferences on
         """
-        model = Qwen2VLForConditionalGeneration.from_pretrained(
-            self.model_name, torch_dtype="auto", device_map="auto"
-        )
+        model = Qwen2VLForConditionalGeneration.from_pretrained(self.model_name, torch_dtype="auto", device_map="auto")
         processor = AutoProcessor.from_pretrained(self.model_name)
         return model, processor

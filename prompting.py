@@ -1,4 +1,4 @@
-from action.base import Action, History, ActionResult
+from action.base import Action, ActionResult, History
 from action.qwen_action import AtlasActionmodel, QwenVLActionModel
 from planner.base import Plan
 from planner.qwen_planner import QwenVLPlanner
@@ -62,7 +62,6 @@ def take_action(
     )
     grounding.action = action.action
     grounding.action_target = action.action_target
-    print("Grounding: ", grounding)
 
     history.append(grounding, ActionResult.PENDING)
 
@@ -109,9 +108,7 @@ def plan_task(
 
 
 if __name__ == "__main__":
-    task: str = (
-        'Register a client with email "example@email.com" and password "password123"'
-    )
+    task: str = 'Register a client with email "example@email.com" and password "password123"'
 
     context: str = """
     - The organization operates in a legal advisory setting.

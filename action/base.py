@@ -1,5 +1,6 @@
-from typing import Dict, List, Optional, NamedTuple
+from abc import abstractmethod
 from enum import Enum, auto
+from typing import Any, List, NamedTuple, Optional, Tuple
 
 ######
 # BASE TYPES
@@ -14,11 +15,11 @@ class Action:
     def __init__(
         self,
         prompt: List[dict[str, str]],
-        action_target: str,
+        action_target: str | None,
         raw: str,
         action: Optional[str] = None,
-        reasoning: Optional[Dict[str, list[str]] | str] = None,
-        coords: Optional[List[float | list[float]]] = None,
+        reasoning: Optional[List[str | Any] | str] = None,
+        coords: Optional[Tuple[float, float]] = None,
         key: Optional[str] = None,
     ):
         if coords and key:
@@ -81,19 +82,14 @@ class History:
         return self.results
 
     def __str__(self):
-        return "\n".join(
-            [
-                f"Executed {action} with result {result}"
-                for action, result in self.results
-            ]
-        )
+        return "\n".join([f"Executed {action} with result {result}" for action, result in self.results])
 
     @property
     def last_result(self):
         last = next(iter(self.results[-1:]), None)
         return last.result if last else None
 
-    def append(self, action: Action, result: ActionExecution):
+    def append(self, action: Action, result: ActionResult):
         self.actions.append(action)
         self.results.append(ActionExecution(action, result))
 
@@ -104,6 +100,7 @@ class History:
 
 
 class ActionInterface:
+    @abstractmethod
     def action(self, sys_prompt, user_prompt, *args, **kwargs) -> Action:
         """
         Creates an action for a current state of the desktop given a action and an action to execute
@@ -118,10 +115,12 @@ class ActionInterface:
 
         pass
 
-    def parse_action(self, action: str) -> Action:
+    @abstractmethod
+    def parse_action(self, prompt: list[dict[str, str]], model_response: str) -> Action:
         """
         Given a action in string format, it parses it and returns a Action object
 
+        @param prompt: The prompt given to the model
         @param action: Output of action method
 
         @returns Action object
